@@ -94,7 +94,7 @@ func Example_Trace_jsonExport() {
 	blob, _ := json.Marshal(protoTraceReq)
 
 	ocagentAddr := "http://localhost:55678" // The address of the running OpenCensus Agent.
-	req, err := http.NewRequest("POST", ocagentAddr, bytes.NewReader(blob))
+	req, err := http.NewRequest("POST", ocagentAddr+"/v1/trace", bytes.NewReader(blob))
 	if err != nil {
 		log.Fatalf("Failed to create HTTP request: %v", err)
 	}
@@ -178,7 +178,7 @@ func Example_Metrics_jsonExport() {
 	blob, _ := json.Marshal(protoMetricsReq)
 
 	ocagentAddr := "http://localhost:55678" // The address of the running OpenCensus Agent.
-	req, err := http.NewRequest("POST", ocagentAddr, bytes.NewReader(blob))
+	req, err := http.NewRequest("POST", ocagentAddr+"/v1/metrics", bytes.NewReader(blob))
 	if err != nil {
 		log.Fatalf("Failed to create HTTP request: %v", err)
 	}
@@ -188,5 +188,4 @@ func Example_Metrics_jsonExport() {
 		log.Fatalf("Failed to get a successful response: %v", err)
 	}
 	_ = res
-
 }

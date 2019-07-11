@@ -21,9 +21,9 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/tracestate"
 
+	"github.com/golang/protobuf/ptypes/timestamp"
 	agenttracepb "github.com/orijtech/ocagent_structs_no_grpc/pb/agent/trace/v1"
 	tracepb "github.com/orijtech/ocagent_structs_no_grpc/pb/trace/v1"
-	"github.com/golang/protobuf/ptypes/timestamp"
 )
 
 const (

@@ -16,7 +16,7 @@ package ocagent
 
 import (
 	"os"
-        "time"
+	"time"
 
 	commonpb "github.com/orijtech/ocagent_structs_no_grpc/pb/agent/common/v1"
 	"go.opencensus.io"

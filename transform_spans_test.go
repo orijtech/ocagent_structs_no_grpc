@@ -23,8 +23,8 @@ import (
 	"go.opencensus.io/trace"
 	"go.opencensus.io/trace/tracestate"
 
-	tracepb "github.com/orijtech/ocagent_structs_no_grpc/pb/trace/v1"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	tracepb "github.com/orijtech/ocagent_structs_no_grpc/pb/trace/v1"
 )
 
 func TestOCSpanToProtoSpan_endToEnd(t *testing.T) {
