@@ -16,10 +16,14 @@ package ocagent_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
+
+	// We use JSONPb instead of "encoding/json" for
+	// JSON serialization of Proto messages.
+	"github.com/golang/protobuf/jsonpb"
 
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
@@ -36,7 +40,7 @@ var (
 )
 
 // The example shows how to JSON export Traces from OpenCensus-Go trace.SpanData to OpenCensus-Proto trace.Span requests.
-func Example_Trace_jsonExport() {
+func ExampleTrace_jsonExport() {
 	ocTracestate, err := tracestate.New(new(tracestate.Tracestate), tracestate.Entry{Key: "foo", Value: "bar"},
 		tracestate.Entry{Key: "a", Value: "b"})
 	if err != nil || ocTracestate == nil {
@@ -90,24 +94,36 @@ func Example_Trace_jsonExport() {
 	}
 
 	protoTraceReq := ocagent.OpenCensusSpanDataToProtoSpans([]*trace.SpanData{ocSpanData})
+	// Ensure that you ALWAYS pass in the node as the first message.
+	protoTraceReq.Node = ocagent.NodeWithStartTime("example", time.Now())
 
-	blob, _ := json.Marshal(protoTraceReq)
+	ts := &jsonpb.Marshaler{}
+	buf := new(bytes.Buffer)
+	if err := ts.Marshal(buf, protoTraceReq); err != nil {
+		log.Fatalf("Failed to JSONPb marshal: %v", err)
+	}
 
 	ocagentAddr := "http://localhost:55678" // The address of the running OpenCensus Agent.
-	req, err := http.NewRequest("POST", ocagentAddr+"/v1/trace", bytes.NewReader(blob))
+	req, err := http.NewRequest("POST", ocagentAddr+"/v1/trace", buf)
 	if err != nil {
 		log.Fatalf("Failed to create HTTP request: %v", err)
 	}
+
+	tr := &http.Transport{}
+	client := &http.Client{
+		Transport: tr,
+	}
 	req.Header.Set("Content-Type", "application/json")
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		log.Fatalf("Failed to get a successful response: %v", err)
 	}
-	_ = res
+	out, _ := httputil.DumpResponse(res, true)
+	log.Printf("Res: %s\n", out)
 }
 
 // The example shows how to JSON export view.Data from OpenCensus-Go to OpenCensus-Proto metrics.Metric requests.
-func Example_Metrics_jsonExport() {
+func ExampleMetrics_jsonExport() {
 	// This view.Data will typically be obtained after binding to a view.Exporter.
 	keyField, _ := tag.NewKey("field")
 	keyName, _ := tag.NewKey("name")
@@ -174,11 +190,17 @@ func Example_Metrics_jsonExport() {
 	}
 
 	protoMetricsReq := ocagent.OpenCensusViewDataToProtoMetrics([]*view.Data{vd})
+	// Ensure that you ALWAYS pass in the node as the first message.
+	protoMetricsReq.Node = ocagent.NodeWithStartTime("example", time.Now())
 
-	blob, _ := json.Marshal(protoMetricsReq)
+	ts := &jsonpb.Marshaler{}
+	buf := new(bytes.Buffer)
+	if err := ts.Marshal(buf, protoMetricsReq); err != nil {
+		log.Fatalf("Failed to JSONPb marshal: %v", err)
+	}
 
 	ocagentAddr := "http://localhost:55678" // The address of the running OpenCensus Agent.
-	req, err := http.NewRequest("POST", ocagentAddr+"/v1/metrics", bytes.NewReader(blob))
+	req, err := http.NewRequest("POST", ocagentAddr+"/v1/metrics", buf)
 	if err != nil {
 		log.Fatalf("Failed to create HTTP request: %v", err)
 	}
@@ -187,5 +209,6 @@ func Example_Metrics_jsonExport() {
 	if err != nil {
 		log.Fatalf("Failed to get a successful response: %v", err)
 	}
-	_ = res
+	out, _ := httputil.DumpResponse(res, true)
+	log.Printf("Res: %s\n", out)
 }
